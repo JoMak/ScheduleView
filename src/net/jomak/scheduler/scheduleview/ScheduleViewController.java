@@ -1,7 +1,9 @@
 package net.jomak.scheduler.scheduleview;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Vector;
@@ -9,41 +11,46 @@ import java.util.Vector;
 import net.jomak.scheduler.event.SchedulerEvent;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.LinearLayout.LayoutParams;
 
-public class ScheduleViewController {
+public class ScheduleViewController{
 	private final Context mContext;
-	private final ScheduleView mScheduleView
-	
+	private final ScheduleView mScheduleView;
+	private Canvas mCanvas;
+
 	private LayoutInflater mLayoutInflater;
 	private Vector<SchedulerEvent> eventList;
 	private int xNum = 7;
 	private int yNum = 24;
 	private LayoutParams layoutParams;
+	
 	// Measurements
 	private int cellHeight;
 	private int cellWidth;
 	private int eventDrawAreaWidth;
 	private int eventDrawAreaHeight;
-	
-	// View Ids
+
+	// Cell View Ids
 	private int cellViewId;
 	private int xLabelsId;
 	private int yLabelsId;
-	// Views 
+	
+	// Cell Views 
 	private View cellView;
 	private View xLabels;
 	private View yLabels;
-	
-	//Subviews
+
+	// Subviews
 	private LinearLayout bottomHoursLinearLayout;
 	private LinearLayout cellGridLinearLayout;
 	private RelativeLayout eventDrawAreaRelativeLayout;
+
+	// TODO: Extract this out 
+	private SchedulerEvent totalTimeSpan;
 	
 	/**
 	 * Base Constructor
@@ -74,10 +81,17 @@ public class ScheduleViewController {
 		eventDrawAreaRelativeLayoutParams.addRule(RelativeLayout.BELOW, xLabelsId);
 		eventDrawAreaRelativeLayoutParams.addRule(RelativeLayout.RIGHT_OF, yLabelsId);
 	}
-	
-	protected void onDraw(Canvas canvas) {
+	public void onDraw(Canvas canvas) {
+		mCanvas = canvas;
 		measureSizes();
-		// Add the basic layout (everything but the event boxes)
+		drawBaseLayout();
+		drawEvents(canvas);
+	}
+	/**
+	 * Add the base layout (everything but the event boxes)
+	 * ie. Labels, grid, etc...
+	 */
+	private void drawBaseLayout(){
 		mScheduleView.addView(xLabels);	// add the top bar (if applicable)
 		// Lay out the grid
 		for(int i=0; i<yNum; i++){
@@ -91,12 +105,24 @@ public class ScheduleViewController {
 		bottomHoursLinearLayout.addView(yLabels);	
 		bottomHoursLinearLayout.addView(cellGridLinearLayout);
 		mScheduleView.addView(bottomHoursLinearLayout);	// add the bottom half
-		drawEvents(canvas);
 	}
+	/**
+	 * Remove all event boxes and redraw them all.
+	 */
+	private void redrawAllEvents(){
+		eventDrawAreaRelativeLayout.removeAllViews();
+		drawEvents(mCanvas);
+	}
+	/**
+	 * The thread that computes the overlapping edges
+	 */
 	private final Thread ComputationThread = new Thread(new Runnable(){
 		@Override
 		public void run(){
-			computeEventWidth(eventList);
+			if (computeEventWidth(eventList)){
+				// The thread successfully finished without being interrupted.
+				redrawAllEvents();	
+			}
 		}
 		private boolean computeEventWidth(List<SchedulerEvent> events){
 			ArrayList<Edge> masterEdges = new ArrayList<Edge>();
@@ -137,7 +163,7 @@ public class ScheduleViewController {
 		dest.add(new Edge(Edge.END, schedulerEvent.getEndTime().getTimeInMillis(), originalIndex));
 	}
 	private void measureSizes(){
-		post(new Runnable() {
+		mScheduleView.post(new Runnable() {
 			public void run() {
 				eventDrawAreaWidth = mScheduleView.getWidth()-yLabels.getWidth();
 				eventDrawAreaHeight = mScheduleView.getHeight()-xLabels.getHeight();
@@ -151,13 +177,21 @@ public class ScheduleViewController {
 	 */
 	private void drawEvents(Canvas canvas){
 		for (int i=0;i<eventList.size();i++){
-			eventDrawAreaRelativeLayout.addView(makeEventBox(eventList.get(i), ));
+			eventDrawAreaRelativeLayout.addView(makeEventBox(eventList.get(i), cellWidth, cellHeight));
 		}
 	}
-	private LinearLayout makeEventBox(SchedulerEvent schedulerEvent, int maxWidth, int maxHeight){
-		LinearLayout eventBoxLinearLayout = new LinearLayout(mContext());
+	private LinearLayout makeEventBox(SchedulerEvent schedulerEvent, int cellWidth, int cellHeight){
+		GregorianCalendar startTime = schedulerEvent.getStartTime();
+		GregorianCalendar durationTime = schedulerEvent.getDuration();
+		
+		LinearLayout eventBoxLinearLayout = new LinearLayout(mContext);
 		LinearLayout.LayoutParams eventBoxLinearLayoutParams = (LayoutParams) eventBoxLinearLayout.getLayoutParams();
-		eventBoxLinearLayoutParams.setMargins(, top, right, bottom);
+		int left = CalUtils.differenceInDays(startTime, totalTimeSpan.getStartTime())*cellWidth;
+		int top = (startTime.get(Calendar.HOUR_OF_DAY) + startTime.get(Calendar.MINUTE)/60)*cellHeight;
+		int right = left + cellWidth/schedulerEvent.getOverlapWidth();
+		int bottom = top + (durationTime.get(Calendar.HOUR_OF_DAY) + durationTime.get(Calendar.MINUTE)/60)*cellHeight;
+				
+		eventBoxLinearLayoutParams.setMargins(left,top,right, bottom);
 		return eventBoxLinearLayout;
 	}
 	// TODO: Better threading
@@ -167,11 +201,7 @@ public class ScheduleViewController {
 		}
 		ComputationThread.start();
 	}
-	@Override
-	public void invalidate(){
-		updateData();
-		super.invalidate();
-	}
+	// ----- Accessor Methods -----//
 	public void setEventList(Vector<SchedulerEvent> eventList){
 		this.eventList = eventList;
 	}
