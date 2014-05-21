@@ -1,6 +1,6 @@
 package net.jomak.scheduler.scheduleview;
 
-public class Edge implements Comparable<Edge>{
+public final class Edge implements Comparable<Edge>{
 	final static int START = 1;
 	final static int END = -1;
 	/**

@@ -1,4 +1,4 @@
-package net.jomak.scheduler.event;
+package net.jomak.scheduleview.event;
 
 public class Coordinate {
 	private int x;

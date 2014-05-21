@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/scheduleview_base"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+	<!-- Day Labels -->
+	<LinearLayout
+	    android:id="@+id/day_labels"
+	    android:layout_width="wrap_content"
+	    android:layout_height="15dp"
+	    android:orientation="horizontal"/>
+	<LinearLayout
+	    android:id="@+id/schedule_span"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" />
+	<ScrollView
+	    android:id="@+id/schedule_scroll"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@+id/day_labels"
+		android:layout_toRightOf="@+id/hour_labels">
+		<RelativeLayout
+		    android:id="@+id/schedule_scroll_child"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="horizontal">
+		    <!-- Hours Labels -->
+		    <LinearLayout
+		        android:id="@+id/hour_labels"
+		        android:layout_width="25dp"
+		        android:layout_height="wrap_content"
+		        android:orientation="vertical">
+			</LinearLayout>
+			
+			<!-- Cells -->
+			<TableLayout
+			    android:id="@+id/cell_table"
+			    android:layout_width="match_parent"
+			    android:layout_height="match_parent"
+			    android:background="#FF00FF"
+			    android:layout_toRightOf="@+id/hour_labels"/>
+			<RelativeLayout
+			    android:id="@+id/event_draw_area"
+			    android:layout_width="match_parent"
+			    android:layout_height="wrap_content"
+			    android:background="#008000"
+			    android:layout_toRightOf="@+id/hour_labels">
+			</RelativeLayout>
+		</RelativeLayout>
+	</ScrollView>
+</merge>

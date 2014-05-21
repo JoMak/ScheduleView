@@ -1,9 +1,10 @@
-package net.jomak.scheduler.scheduleview;
+package net.jomak.scheduleview.utils;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 public class CalUtils {
+	public static final String[] DAYS_OF_WEEK = {"Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 	/**
 	 * Calculates the difference in days, rounding the operands down to the nearest day.
 	 * Ex. Jan 3rd 12:31 pm - Jan 2nd 4:00 pm
@@ -16,6 +17,6 @@ public class CalUtils {
 		GregorianCalendar subtrahendFloor = new GregorianCalendar(subtrahend.get(Calendar.YEAR), subtrahend.get(Calendar.MONTH), subtrahend.get(Calendar.DAY_OF_MONTH));
 		GregorianCalendar result = new GregorianCalendar();
 		result.setTimeInMillis(minuendFloor.getTimeInMillis()-subtrahendFloor.getTimeInMillis());
-		return result.get(Calendar.DAY_OF_YEAR)-1;
+		return result.get(Calendar.DAY_OF_YEAR);
 	}
 }

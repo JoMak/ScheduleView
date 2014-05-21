@@ -1,5 +1,6 @@
-package net.jomak.scheduler;
+package net.jomak.scheduleview;
 
+import net.jomak.scheduler.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
